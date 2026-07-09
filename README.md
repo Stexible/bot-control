@@ -61,6 +61,50 @@ python3 BOTS/botctl.py --report --no-color
 ./start_choice.sh
 ```
 
+## Интерактивное управление при авторизации (TTY1)
+
+Для серверов без постоянного использования GUI (например, Dell Server) настроено интерактивное меню выбора режима работы, которое запускается **строго в момент авторизации пользователя** в первой текстовой консоли. Это защищает ресурсы сервера: графическая оболочка (GDM3) не запустится автоматически, пока пользователь сам не выберет этот вариант после ввода логина и пароля.
+
+### Как это реализовано
+
+- **Скрипт выбора (`~/start_choice.sh`):** При запуске проверяет, находится ли пользователь на физическом мониторе в первой виртуальной консоли (`TTY1`) и не запущен ли дисплейный сервер. Если условия совпадают, выводится меню.
+- **Механизм автозапуска:** Вызов скрипта интегрирован в конфигурационный файл bash-оболочки пользователя, благодаря чему он срабатывает автоматически сразу после успешного логина.
+
+### Настройка для конкретного пользователя
+
+Включать и выключать это меню можно индивидуально для любого пользователя в системе.
+
+#### Включение меню
+
+1. Перенесите `start_choice.sh` в доступное место (например, `/usr/local/bin/` или оставьте в домашней директории).
+2. Откройте `.bashrc` нужного пользователя:
+   ```bash
+   nano ~/.bashrc
+   ```
+3. Прокрутите файл в самый конец и добавьте строку вызова скрипта:
+   ```bash
+   # Запуск интерактивного меню выбора режима (только для TTY1)
+   ~/start_choice.sh
+   ```
+4. Сохраните файл (`Ctrl+O`, `Enter`) и выйдите (`Ctrl+X`).
+
+#### Отключение меню
+
+1. Откройте `.bashrc` этого пользователя:
+   ```bash
+   nano ~/.bashrc
+   ```
+2. Найдите в самом конце строку `~/start_choice.sh` и закомментируйте её (поставьте `#` в начале строки) или удалите:
+   ```bash
+   # ~/start_choice.sh
+   ```
+3. Сохраните изменения. При следующей авторизации меню беспокоить не будет.
+
+### Поведение системы
+
+- **Локальный вход через TTY1** (после ввода пароля): система выводит меню — запуск GUI, работа в консоли (с выводом статуса ботов), перезагрузка или выключение.
+- **Удалённый доступ (SSH) / GUI-терминал:** скрипт распознаёт, что это не физический TTY1, и вместо меню просто выводит актуальный статус ботов (`botctl.py --report`).
+
 ## Структура
 
 ```
@@ -138,6 +182,50 @@ python3 BOTS/botctl.py --report --no-color
 # Boot menu (on TTY1 with no $DISPLAY)
 ./start_choice.sh
 ```
+
+## Interactive boot menu (TTY1)
+
+For servers without constant GUI usage (e.g., Dell Server), an interactive mode-selection menu is configured to launch **strictly at user login** on the first text console. This protects server resources: the graphical shell (GDM3) will not start automatically until the user explicitly chooses that option after entering their username and password.
+
+### How it works
+
+- **Selection script (`~/start_choice.sh`):** On launch, it checks whether the user is on the physical monitor in the first virtual console (`TTY1`) and whether the display server is running. If conditions are met, the menu is displayed.
+- **Auto-start mechanism:** The script call is integrated into the user's bash shell configuration file, so it triggers automatically right after a successful login.
+
+### Setup for a specific user
+
+You can enable or disable this menu individually for any user on the system.
+
+#### Enabling the menu
+
+1. Move `start_choice.sh` to an accessible location (e.g., `/usr/local/bin/` or keep it in the user's home directory).
+2. Open `.bashrc` for the target user:
+   ```bash
+   nano ~/.bashrc
+   ```
+3. Scroll to the very end and add the script call:
+   ```bash
+   # Interactive boot menu (TTY1 only)
+   ~/start_choice.sh
+   ```
+4. Save the file (`Ctrl+O`, `Enter`) and exit (`Ctrl+X`).
+
+#### Disabling the menu
+
+1. Open `.bashrc` for that user:
+   ```bash
+   nano ~/.bashrc
+   ```
+2. Find the `~/start_choice.sh` line at the end and comment it out (add `#` at the beginning) or remove it:
+   ```bash
+   # ~/start_choice.sh
+   ```
+3. Save changes. The menu will no longer appear on the next login.
+
+### System behavior
+
+- **Local login via TTY1** (after entering the password): the system displays the menu — launch GUI, work in console (with bot status overview), reboot, or shutdown.
+- **Remote access (SSH) / GUI terminal:** the script detects that this is not a physical TTY1 and, instead of the menu, simply prints the current bot status (`botctl.py --report`).
 
 ## Structure
 
